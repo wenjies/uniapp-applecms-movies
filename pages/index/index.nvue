@@ -1,0 +1,148 @@
+<template>
+	<view>
+		<myp-x-status></myp-x-status>
+		<!-- 顶部 -->
+		<myp-tabs-h :value="current" textLabel="type_name" :isTap="true" :items="tabs" textSize="l" activeTextSize="lll"
+		 activeTextType="main" activeType="main" textType="second" textStyle="font-weight:700;" :hasIndicator="false" width="125"
+		 @change="toChangeTab" style="margin-top: -15rpx;">
+		</myp-tabs-h>
+		<view class="border mx-2 mt-1"></view>
+		<view class="myp-flex-row myp-justify-between" @click="toSearch()">
+			<view class="search">
+				<view class="myp-flex-row align-center">
+					<myp-icon name="search" type="main" size="lll" class="search-icon" @iconClicked="toSearch()"></myp-icon>
+					<text class="search-content-text">{{hotSearchText}}</text>
+				</view>
+			</view>
+		</view>
+		<swiper :current="current" @change="swiperChange" style="width:750rpx;flex:1;">
+			<swiper-item>
+				<recommend ref="pages_index" @changeTab="toChangeTab"></recommend>
+			</swiper-item>
+			<swiper-item v-for="(item,index) in tabs2" :key="index" v-if="tabs2">
+				<movie ref="pages" :refName="'ref'+item.type_id" :current="item.type_id"></movie>
+			</swiper-item>
+		</swiper>
+	</view>
+</template>
+
+<script>
+	import api from '@/api/index.js';
+	import $U from '@/common/util.js';
+	import recommend from '@/pages/index/components/recommend/recommend.vue';
+	import movie from '@/pages/index/components/movie/movie.vue';
+	import recommendMixin from '@/pages/index/mixin/recommendMixin.js';
+	export default {
+		mixins: [recommendMixin],
+		components: {
+			recommend,
+			movie
+		},
+		data() {
+			return {
+				tabs: [{
+					type_id: 'a',
+					type_name: '精选'
+				}],
+				tabs2: [],
+				current: 0,
+				hotSearchText: ''
+			}
+		},
+		onLoad() {
+			this.getTabs();
+			this.getHotSearch();
+		},
+		onReady() {
+			setTimeout(() => {
+				this.toLoadPage();
+			}, 50);
+		},
+		methods: {
+			toChangeTab(index) {
+				this.current = index;
+			},
+			swiperChange(item) {
+				this.toChangeTab(item.detail.current);
+				if (this.current == 0) return this.$refs['pages_index'].reloadPage();
+				this.$refs.pages[this.current - 1].reloadPage();
+			},
+			toLoadPage() {
+				this.$refs['pages_index'].toLoadPage();
+			},
+			getTabs() {
+				api.getTabs('vod').then(res => {
+					this.tabs2 = res.data.list;
+					for (var i = 0; i < res.data.list.length; i++) {
+						this.tabs.push(res.data.list[i]);
+					}
+					setTimeout(()=>{
+						$U.cache('index_tbs',this.tabs);
+						$U.cache('index_tbs2',this.tabs2);
+					},20);
+				}).catch(err => {
+					this.tabs = $U.cache('index_tbs');
+					this.tabs2 = $U.cache('index_tbs2');
+				});
+			},
+			toSearch() {
+				return uni.navigateTo({
+					url: '/pages/search/search?type=vod'
+				});
+			},
+			getHotSearch() {
+				let cache = $U.cache('index_hotSearch');
+				if (cache) {
+					let rand = $U.randNumber(cache.length);
+					if (rand == false) return this.hotSearchText = '输入影片名称、演员或导演';
+					return this.hotSearchText = '大家都在搜：' + cache[rand].keyword;
+				}
+				api.getHotSearch().then(res => {
+					let num = res.data.list ? res.data.list.length : 0;
+					let rand = $U.randNumber(num);
+					if (rand == false) return this.hotSearchText = '输入影片名称、演员或导演';
+					$U.cache('index_hotSearch', res.data.list, 3600);
+					return this.hotSearchText = '大家都在搜：' + res.data.list[rand].keyword;
+				});
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	.border {
+		border-top-color: #F9F9F9;
+		border-style: solid;
+		border-top-width: 2rpx;
+	}
+
+	.search-content {
+		flex-direction: row;
+		align-items: center;
+
+		&-text {
+			lines: 1;
+			text-overflow: ellipsis;
+			width: 650rpx;
+			font-size: 27rpx;
+			line-height: 68rpx;
+			color: #8A8A8A;
+		}
+	}
+
+	.search {
+		margin-top: 10rpx;
+		margin-bottom: 10rpx;
+		width: 700rpx;
+	}
+
+	.search-icon {
+		margin-left: 20rpx;
+		margin-right: 10rpx;
+	}
+
+	.right-icon {
+		margin-right: 20rpx;
+		margin-left: 15rpx;
+	}
+</style>

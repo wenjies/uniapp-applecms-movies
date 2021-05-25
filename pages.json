@@ -1,0 +1,190 @@
+{
+	"pages": [{
+			"path": "pages/index/index",
+			"style": {
+				"disableScroll": true,
+				"backgroundColor": "#FFFFFF"
+			}
+		},
+		{
+			"path": "pages/class/class",
+			"style": {}
+		},
+		{
+			"path": "pages/art/art",
+			"style": {}
+		},
+		{
+			"path": "pages/special/special",
+			"style": {
+
+			}
+		}, {
+			"path": "pages/user/user",
+			"style": {
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/detail/art/art",
+			"style": {
+				"titleNView": {
+					"type": "transparent"
+				},
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		},
+		{
+			"path": "pages/search/search",
+			"style": {
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/detail/movie/movie",
+			"style": {
+				"disableScroll": true,
+				"navigationBarTextStyle": "white",
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/user/login/login",
+			"style": {
+				"disableScroll": true,
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/user/edit/edit",
+			"style": {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"disableScroll": true,
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/collect/index",
+			"style": {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/history/index",
+			"style": {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/support/index",
+			"style": {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}, {
+			"path": "pages/setting/setting",
+			"style": {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"disableScroll": true,
+				"backgroundColor":"#bbb",
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		}
+	    ,{
+            "path" : "pages/update/update",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/index/more",
+            "style" : {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+        }
+        ,{
+            "path" : "pages/detail/movie/cache/cache",
+            "style" : {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+        }
+        ,{
+            "path" : "pages/download/download",
+            "style" : {
+				"navigationStyle": "custom", // 隐藏系统导航栏
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+        }
+    ],
+	"tabBar": {
+		"color": "#888888",
+		"selectedColor": "#ff6022",
+		"borderStyle": "white",
+		"backgroundColor": "#ffffff",
+		"list": [{
+				"pagePath": "pages/index/index",
+				"iconPath": "/static/tabbar/index_select.png",
+				"selectedIconPath": "/static/tabbar/index_selected.png",
+				"text": "首页"
+			}, {
+				"pagePath": "pages/class/class",
+				"iconPath": "/static/tabbar/search_select.png",
+				"selectedIconPath": "/static/tabbar/search_selected.png",
+				"text": "分类"
+			},
+			{
+				"pagePath": "pages/art/art",
+				"iconPath": "/static/tabbar/art_select.png",
+				"selectedIconPath": "/static/tabbar/art_selected.png",
+				"text": "资讯"
+			},
+			{
+				"pagePath": "pages/special/special",
+				"iconPath": "/static/tabbar/special_select.png",
+				"selectedIconPath": "/static/tabbar/special_selected.png",
+				"text": "专题"
+			},
+			{
+				"pagePath": "pages/user/user",
+				"iconPath": "/static/tabbar/user_select.png",
+				"selectedIconPath": "/static/tabbar/user_selected.png",
+				"text": "我的"
+			}
+		]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"navigationStyle": "custom"
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"myp-(.*)": "@/mypUI/myp-$1/myp-$1.vue",
+			"^u-(.*)": "@/uview-ui/components/u-$1/u-$1.vue"
+		}
+	}
+}

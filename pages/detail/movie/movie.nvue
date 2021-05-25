@@ -1,0 +1,457 @@
+<template>
+	<view>
+		<myp-x-status bgType="black"></myp-x-status>
+		<div class="content">
+			<chunlei-video isBack ref="video" autoplay orientation class="video" :episode="episode.length ||  0" :index="current"
+			 color="#ff6022" @playEpi="playEpi" :downloadBtn="false" :title="videoList[current-1].title" :srcList="videoList[current-1].srcList"
+			 :gDuration="videoList[current-1].gDuration" :initialTime="videoList[current-1].initialTime">
+			</chunlei-video>
+		</div>
+		<view class="align-center justify-center mt-3" v-if="!this.load">
+			<myp-loading-indicator width="80rpx" height="80rpx"></myp-loading-indicator>
+		</view>
+		<view class="mx-2" v-if="this.load">
+			<view class="detail flex-column">
+				<view class="myp-flex-row align-center justify-between">
+					<text class="detail-title">{{detail.vod_name}}</text>
+					<text class="detail-title-quest">影片反馈</text>
+				</view>
+				<view class="myp-flex-row myp-align-center detail-title2">
+					<text class="detail-title2-text">{{detail.vod_score}}分 ·</text>
+					<text class="detail-title2-text"> {{detail.parentType ? detail.parentType.type_name : '未知'}} ·</text>
+					<text class="detail-title2-text"> {{detail.vod_remarks ? replaceRemarks : '暂无'}} ·</text>
+					<text class="detail-title2-text"> {{detail.vod_hits}}次播放 ·</text>
+					<view class="myp-flex-row align-center" @click="openPopup('introduce')">
+						<text class="detail-title2-text"> 简介</text>
+						<uni-icons type="arrowright" size="14" color="gray" @click="openPopup('introduce')"></uni-icons>
+					</view>
+				</view>
+				<view class="myp-flex-row myp-align-center justify-between detail-icon flex-1">
+					<view class="myp-flex-row myp-align-center" @click="cache">
+						<uni-icons type="cloud-download" size="21" color="#333" @click="cache"></uni-icons>
+						<text class="ml-1 detail-icon-text">缓存影片</text>
+					</view>
+					<view class="myp-flex-row" style="margin-top: 5rpx;">
+						<view class="myp-flex-row mr-4 justify-end align-center detail-icon-like" @click="support">
+							<my-icon name="like" iconStyle="font-size:39rpx;margin-bottom: 3rpx;" :type="isSupport ? 'main' : ''" @click="support"></my-icon>
+							<text class="ml-1 detail-icon-text" :class="isSupport ? 'main-color' : ''">{{detail.vod_up < 1 ? '顶' : detail.vod_up}}</text>
+						</view>
+						<view class="myp-flex-row myp-align-center justify-end detail-icon-collect" @click="collect">
+							<my-icon :name="isCollect ? 'wseed' : 'wsee'" iconStyle="font-size:40rpx" :type="isCollect ? 'main' : ''" @click="collect"></my-icon>
+							<text class="ml-1 detail-icon-text" :class="isCollect ? 'main-color' : ''">{{isCollect ? '已收藏' : '收藏'}}</text>
+						</view>
+					</view>
+				</view>
+				<view class="my-4">
+					<view class="myp-flex-row myp-align-center justify-between mb-2">
+						<text style="font-weight: 700;font-size: 29rpx;">剧集列表</text>
+						<view class="myp-flex-row myp-align-center" @click="openPopup('episode')">
+							<text style="font-size: 25rpx;color: gray;">展开列表</text>
+							<uni-icons :type="'arrow'+arrow" size="15" color="gray" style="margin-top: 5rpx;" @click="openPopup('episode')"></uni-icons>
+						</view>
+					</view>
+					<myp-tabs-h :value="current-1" textLabel="episode" :isTap="true" :items="episode" textSize="s" activeTextSize="s"
+					 width="0" activeTextType="main" activeType="main" textType="second" :hasIndicator="false" @change="changeEpi"
+					 tabsStyle="margin-right:20rpx" :itemStyle="itemStyle" textStyle="padding-left:20rpx;padding-right:20rpx;">
+					</myp-tabs-h>
+				</view>
+				<view class="myp-flex-row myp-align-center justify-between mb-2">
+					<text style="font-weight: 700;font-size: 29rpx;">播放来源</text>
+					<text style="font-size: 25rpx;color: gray;">播放失败可尝试切换播放源</text>
+				</view>
+				<myp-tabs-h :value="playFromId" textLabel="" :isTap="true" :items="playFrom" textSize="s" activeTextSize="s" width="0"
+				 activeTextType="main" activeType="main" textType="second" :hasIndicator="false" @change="changeFrom" tabsStyle="margin-right:20rpx"
+				 :itemStyle="itemStyle2" textStyle="padding-left:20rpx;padding-right:20rpx;">
+				</myp-tabs-h>
+			</view>
+		</view>
+		<uni-popup ref="episode" type="bottom">
+			<view class="popup" :style="{height:popupH}">
+				<view class="myp-flex-row myp-align-center justify-between mx-2 mb-1" style="height: 70rpx;">
+					<text style="font-size: 29rpx;line-height: 70rpx;">全部剧集({{episode.length}})</text>
+					<uni-icons type="arrowdown" size="20" color="gray" @click="closePopup('episode')"></uni-icons>
+				</view>
+				<scroll-view scroll-y="true" :scroll-with-animation="true" :show-scrollbar="true">
+					<view class="myp-flex-row myp-align-center justify-start flex-wrap ml-2">
+						<block v-for="(item,index) in episode" :key="index">
+							<view class="mb-2 mr-3 popup-episode-box align-center justify-center" @click="changeEpi(index)">
+								<text class="popup-episode-box-text nowrap" :class="current-1 == index ? 'main-color' : ''">{{item.episode}}</text>
+							</view>
+						</block>
+					</view>
+				</scroll-view>
+			</view>
+		</uni-popup>
+		<uni-popup ref="introduce" type="bottom">
+			<view class="popup" :style="{height:popupH}">
+				<view class="myp-flex-row myp-align-center justify-between mx-2 mb-1" style="height: 60rpx;margin-top: 7rpx;">
+					<text class="detail-title" style="width: 645rpx;line-height: 60rpx;">{{detail.vod_name}}</text>
+					<uni-icons type="arrowdown" size="20" color="gray" @click="closePopup('introduce')"></uni-icons>
+				</view>
+				<scroll-view scroll-y="true" :scroll-with-animation="true" :show-scrollbar="false">
+					<view class="mx-2">
+						<view class="align-center myp-flex-row">
+							<uni-rate :value="detail.vod_score / 2" activeColor="#ff6022" :size="17" :margin="6" allowHalf :readonly="true" />
+							<text class="main-color ml-1" style="font-size: 27rpx;">{{detail.vod_score}}</text>
+						</view>
+						<view class="myp-flex-row myp-align-center detail-title2">
+							<text class="detail-title2-text">{{detail.vod_year != false ? detail.vod_year : '未知年份'}} ·</text>
+							<text class="detail-title2-text"> {{detail.parentType ? detail.parentType.type_name : '未知'}} ·</text>
+							<text class="detail-title2-text"> {{detail.type ? detail.type.type_name : '未知'}} ·</text>
+							<text class="detail-title2-text"> {{detail.vod_remarks ? replaceRemarks : '暂无'}} ·</text>
+							<text class="detail-title2-text"> {{detail.vod_hits}}次播放</text>
+						</view>
+						<view class="flex-column mt-2">
+							<view class="mb-1"><text class="introduce-text">导演：{{detail.vod_director ? replaceDirector : ''}}</text></view>
+							<view><text class="introduce-text">主演：{{detail.vod_actor ? replaceActor : ''}}</text></view>
+							<view class="mt-3">
+								<text class="font-weight-7" style="font-size: 32rpx;">简介</text>
+								<view class="mt-2">
+									<text class="introduce-text">{{detail.vod_content ? replaceContent : ''}}</text>
+								</view>
+							</view>
+						</view>
+					</view>
+				</scroll-view>
+			</view>
+		</uni-popup>
+	</view>
+</template>
+<script>
+	import chunleiVideo from '@/components/chunlei-video/chunlei-video.nvue';
+	import uniIcons from '@/components/uni-icons/uni-icons.vue';
+	import uniPopup from '@/components/uni-popup/uni-popup.vue';
+	import uniRate from '@/components/uni-rate/uni-rate.vue';
+	import myIcon from '@/components/my-icon/my-icon.vue';
+	import $U from '@/common/util.js';
+	import api from '@/api/index.js';
+	export default {
+		components: {
+			uniPopup,
+			chunleiVideo,
+			uniRate,
+			uniIcons,
+			myIcon
+		},
+		data() {
+			return {
+				videoList: [{
+					srcList: [],
+					title: '',
+					initialTime: 0,
+					gDuration: 100,
+					download: false,
+					poster: ''
+				}], // 播放列表
+				itemStyle: 'background-color: #f7f9fb;border-radius: 8rpx;height: 80rpx;margin-right:20rpx;',
+				itemStyle2: 'background-color: #f7f9fb;border-radius: 8rpx;height: 80rpx;margin-right:20rpx;',
+				fullScreen: false,
+				load:false,
+				platform: '',
+				arrow: 'down',
+				hisPlay: [],
+				vid: 0,
+				popupH: 0,
+				isSupport: false,
+				isCollect: false,
+				progress: 0, //当前播放进度
+				detail: [], // 影片详情
+				episode: [], // 剧集列表
+				current: 1, //当前集数
+				playFrom: [], //播放源
+				playFromId: 0 // 当前播放源ID
+			}
+		},
+		async created() {
+			//#ifdef APP-PLUS
+			plus.screen.lockOrientation("portrait-primary")
+			//#endif
+			uni.getSystemInfo({
+				success: (e) => {
+					// #ifndef MP
+					this.platform = e.platform
+					// #endif
+				}
+			});
+		},
+		async mounted() {
+			await this.pushVideoList()
+		},
+		onLoad(e) {
+			this.vid = e.id;
+			let sysInfo = uni.getSystemInfoSync();
+			this.popupH = sysInfo.windowHeight - sysInfo.statusBarHeight - 236 + 'px';
+			
+		},
+		onShow() {
+			if (typeof this.$refs.video != 'undefined') this.$refs.video.pageShow();
+		},
+		onHide() {
+			this.$refs.video.pageHide();
+		},
+		onUnload() {
+			this.updateUlog();
+		},
+		computed: {
+			replaceDirector() {
+				return this.detail.vod_director.replace(/,/g, ' ');
+			},
+			replaceActor() {
+				return this.detail.vod_actor.replace(/,/g, ' ');
+			},
+			replaceContent() {
+				return this.detail.vod_content.replace(/<[^>]+>/g, "");
+			},
+			replaceRemarks() {
+				return $U.ellipsis(this.detail.vod_remarks);
+			}
+		},
+		methods: {
+			fullscreenchange(e) {
+				this.fullScreen = e
+			},
+			tapBtn() {
+				this.$refs.video.videoPlay();
+			},
+			getProgress() {
+				return this.$refs.video.getCurrent();
+			},
+			getDuration() {
+				return this.$refs.video.getDuration();
+			},
+			playEpi(val) {
+				this.current = val;
+				this.addUlog();
+				this.updateUlog();
+			},
+			openPopup(index) {
+				if (index == 'episode') {
+					this.arrow = 'up';
+				}
+				this.$refs[index].open();
+			},
+			closePopup(index) {
+				if (index == 'episode') {
+					this.arrow = 'down';
+				}
+				this.$refs[index].close();
+			},
+			changeEpi(index) {
+				this.current = index + 1;
+				this.addUlog();
+			},
+			changeFrom(index) {
+				let current = this.current;
+				let res = this.parseDetail(index);
+				if (res != false) this.current = 1;
+				setTimeout(res => {
+					this.current = current;
+					this.addUlog();
+				}, 300);
+			},
+			parseDetail(playFromId = 0) {
+				let videoArr = [];
+				let playList = this.detail.vod_play_url[playFromId];
+				if (!playList) return this.errorVod();
+				this.playFromId = playFromId;
+				this.episode = playList;
+				for (let i = 0; i <= playList.length - 1; i++) {
+					playList[i].src = encodeURI(playList[i].src);
+					let obj = {
+						srcList: [playList[i]],
+						title: this.detail.vod_name + '-' + playList[i].episode,
+						initialTime: 0,
+						gDuration: 2400,
+						download: false,
+						poster: this.detail.vod_pic
+					}
+					if (Object.keys(this.hisPlay).length != 0 && i == this.hisPlay.ulog_nid - 1) {
+						obj = {
+							srcList: [playList[i]],
+							title: this.detail.vod_name + '-' + playList[i].episode,
+							initialTime: this.hisPlay.ulog_progress,
+							gDuration: this.hisPlay.ulog_duration,
+							download: false,
+							poster: this.detail.vod_pic
+						}
+					}
+					videoArr.push(obj)
+				}
+				this.videoList = videoArr;
+				setTimeout(() => {
+					this.addUlog();
+				}, 50);
+				this.$refs.video.changSrc();
+			},
+			getDetail(id) {
+				api.getDetail('vod', id).then(res => {
+					this.detail = res.data.list;
+					this.detail.vod_hits = $U.numberToShort(this.detail.vod_hits, 2);
+					this.playFrom = res.data.list.vod_play_from[0] ? res.data.list.vod_play_from : [];
+					this.parseUlog();
+					this.parseDetail();
+					setTimeout(() => {
+						this.load = true;
+					},200);
+				});
+			},
+			parseUlog() {
+				if (!this.$store.state.loginStatus) return;
+				let log = this.detail.vod_log;
+				this.isSupport = log.isSupport;
+				this.isCollect = log.isCollect;
+				if (Object.keys(log.history_play).length == 0) return;
+				this.hisPlay = log.history_play;
+				this.playFromId = log.history_play.ulog_sid;
+				setTimeout(() => {
+					this.current = log.history_play.ulog_nid;
+					this.addUlog();
+				}, 50);
+			},
+			support() {
+				$U.checkLogin(this.$store.state.loginStatus);
+				api.support('vod', this.vid).then(res => {
+					if (res.msg != 'ok') return;
+					if (!this.isSupport) {
+						this.detail.vod_up += 1;
+						this.isSupport = true;
+						$U.msg('点赞成功');
+					} else {
+						this.detail.vod_up -= 1;
+						this.isSupport = false;
+					}
+				});
+			},
+			collect() {
+				$U.checkLogin(this.$store.state.loginStatus);
+				api.collect('vod', this.vid).then(res => {
+					if (res.msg != 'ok') return;
+					if (!this.isCollect) {
+						this.isCollect = true;
+						$U.msg('加入收藏成功');
+					} else {
+						this.isCollect = false;
+					}
+				});
+			},
+			cache(){
+				if(!this.detail.vod_down_url || !this.detail.vod_down_from){
+					$U.msg('该影片暂无下载资源');
+					return false;
+				}
+				uni.navigateTo({
+					url: '/pages/detail/movie/cache/cache?vid='+this.vid+'&watching='+this.current
+				});
+			},
+			errorVod() {
+				$U.msg('该播放源暂无播放链接，无法播放');
+				return false;
+			},
+			addUlog() {
+				if (!this.$store.state.loginStatus) return;
+				if (!this.episode[this.current - 1]) this.current = 1;
+				api.createVodUlog(this.vid, this.playFromId, this.current, this.episode[this.current - 1].episode);
+			},
+			updateUlog() {
+				if (!this.$store.state.loginStatus) return;
+				if (this.getProgress() < 1) return;
+				api.updateVodUlog(this.vid, this.getProgress(), this.getDuration());
+			},
+			pushVideoList() {
+				let promise = new Promise((resolve, reject) => {
+					this.getDetail(this.vid);
+				})
+				return promise
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.content {
+		width: 750rpx;
+		align-items: center;
+	}
+
+	.video {
+		height: 232px;
+		width: 750rpx;
+	}
+
+	.introduce {
+		&-text {
+			font-size: 27rpx;
+			line-height: 40rpx;
+		}
+	}
+
+	.scrollCss {
+		width: 750rpx;
+		height: 90rpx;
+		flex-direction: row;
+		justify-content: flex-start
+	}
+
+	.popup {
+		width: 750rpx;
+		background-color: #FFFFFF;
+
+		&-episode-box {
+			background-color: #f7f9fb;
+			border-radius: 8rpx;
+			height: 80rpx;
+			width: 150rpx;
+
+			&-text {
+				lines: 1;
+				text-overflow: ellipsis;
+				font-size: 28rpx;
+			}
+		}
+	}
+
+	.detail {
+		margin-top: 25rpx;
+
+		&-title {
+			font-size: 33rpx;
+			font-weight: 700;
+			width: 560rpx;
+			lines: 1;
+			text-overflow: ellipsis;
+
+			&-quest {
+				font-size: 25rpx;
+				color: gray;
+			}
+		}
+
+		&-title2 {
+			margin-top: 25rpx;
+
+			&-text {
+				font-size: 25rpx;
+				color: gray;
+			}
+		}
+
+		&-icon {
+			margin-top: 40rpx;
+
+			&-like {
+				width: 200rpx;
+				height: 35rpx;
+			}
+
+			&-collect {
+				width: 130rpx;
+				height: 35rpx;
+			}
+
+			&-text {
+				line-height: 35rpx;
+				font-size: 27rpx;
+			}
+		}
+	}
+</style>
